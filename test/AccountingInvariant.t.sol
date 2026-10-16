@@ -14,6 +14,7 @@ contract AccountingHandler is Test {
     uint256 public successfulMints;
     uint256 public receivedNFTs;
     uint256 public transferred;
+    uint256 public supplyAtClose;
     mapping(address => uint256) public expectedTreasury;
     address[4] public treasuries;
 
@@ -56,6 +57,16 @@ contract AccountingHandler is Test {
         nft.setTreasury(treasuries[choice % 4]);
     }
 
+    /// @dev The owner may end the sale at any point; later buys must fail and supply must freeze.
+    function closeSale() external {
+        if (nft.totalSupply() == 0 || nft.revealRequested()) return;
+        vm.startPrank(owner);
+        nft.configureVRF(42, keccak256("local mock gas lane"));
+        nft.reveal();
+        vm.stopPrank();
+        supplyAtClose = nft.totalSupply();
+    }
+
     function move(uint256 rawId, uint256 recipientIndex) external {
         uint256 supply = nft.totalSupply();
         if (supply == 0) return;
@@ -74,11 +85,12 @@ contract AccountingInvariant is Fixture {
         super.setUp();
         handler = new AccountingHandler(nft, token, owner);
         targetContract(address(handler));
-        bytes4[] memory selectors = new bytes4[](4);
+        bytes4[] memory selectors = new bytes4[](5);
         selectors[0] = handler.buy.selector;
         selectors[1] = handler.changePrice.selector;
         selectors[2] = handler.changeTreasury.selector;
         selectors[3] = handler.move.selector;
+        selectors[4] = handler.closeSale.selector;
         targetSelector(FuzzSelector({addr: address(handler), selectors: selectors}));
     }
 
@@ -111,5 +123,14 @@ contract AccountingInvariant is Fixture {
         }
         assertEq(lifetime, nft.totalSupply());
         assertEq(held, nft.totalSupply());
+    }
+
+    function invariantSupplyFrozenOnceRevealRequested() public view {
+        if (nft.revealRequested()) {
+            assertEq(nft.totalSupply(), handler.supplyAtClose());
+            assertGt(nft.totalSupply(), 0);
+        } else {
+            assertEq(handler.supplyAtClose(), 0);
+        }
     }
 }

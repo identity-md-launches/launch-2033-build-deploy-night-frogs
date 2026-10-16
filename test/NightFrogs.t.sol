@@ -109,6 +109,33 @@ contract NightFrogsTest is Fixture {
         assertEq(nft.ownerOf(500), bob);
     }
 
+    function testCostCeilingProtectsOpenAllowanceFromPriceRaise() public {
+        token.fund(alice, 1_000e18);
+        vm.prank(alice);
+        token.approve(address(nft), type(uint256).max);
+        vm.prank(owner);
+        nft.setPrice(1_000e18); // Mined ahead of alice's pending mint that was quoted at 2 IMD.
+        vm.prank(alice);
+        vm.expectRevert(abi.encodeWithSelector(NightFrogs.CostAboveLimit.selector, 1_000e18, 2e18));
+        nft.mint(1, 2e18);
+        assertEq(token.balanceOf(alice), 1_000e18);
+        assertEq(nft.totalSupply(), 0);
+        vm.prank(owner);
+        nft.setPrice(2e18);
+        vm.prank(alice);
+        nft.mint(3, 6e18); // Exactly the quoted cost passes.
+        assertEq(nft.balanceOf(alice), 3);
+        assertEq(token.balanceOf(alice), 994e18);
+        assertEq(nft.totalBurned(), 3e18);
+        vm.prank(alice);
+        vm.expectRevert(abi.encodeWithSelector(NightFrogs.CostAboveLimit.selector, 2e18, 2e18 - 1));
+        nft.mint(1, 2e18 - 1);
+        vm.prank(alice);
+        nft.mint(1, 100e18); // A ceiling above the cost never charges more than the cost.
+        assertEq(token.balanceOf(alice), 992e18);
+        assertEq(nft.mintedBy(alice), 4);
+    }
+
     function testPriceAndTreasuryUpdatesPreserveSplit() public {
         vm.startPrank(owner);
         nft.setPrice(6); // Six smallest units: no rounding or minimum denomination assumption.
@@ -167,7 +194,10 @@ contract NightFrogsTest is Fixture {
     function testNoNativeEtherMintingOrFreeMintBackdoor() public {
         vm.deal(alice, 1 ether);
         vm.startPrank(alice);
-        (bool success,) = address(nft).call{value: 1 ether}(abi.encodeCall(NightFrogs.mint, (1)));
+        (bool success,) = address(nft).call{value: 1 ether}(abi.encodeWithSignature("mint(uint256)", 1));
+        assertFalse(success);
+        (success,) =
+            address(nft).call{value: 1 ether}(abi.encodeWithSignature("mint(uint256,uint256)", 1, 2e18));
         assertFalse(success);
         (success,) = address(nft).call(abi.encodeWithSignature("ownerMint(address,uint256)", alice, 1));
         assertFalse(success);

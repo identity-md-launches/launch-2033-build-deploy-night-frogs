@@ -67,7 +67,7 @@ contract MockIMD is ERC20 {
         _pay(from, to, amount, taxPull);
         if (extraPullCharge) _burn(from, 1);
         if (address(reentryTarget) != address(0)) {
-            (reentrySucceeded,) = address(reentryTarget).call(abi.encodeCall(NightFrogs.mint, (1)));
+            (reentrySucceeded,) = address(reentryTarget).call(abi.encodeWithSignature("mint(uint256)", 1));
         }
         if (omitReturn) {
             assembly ("memory-safe") { return(0, 0) }
@@ -164,7 +164,7 @@ contract MintReceiver is IERC721Receiver {
         require(msg.sender == address(nft));
         if (reject) return bytes4(0);
         ++received;
-        if (reenter) (reentrySucceeded,) = address(nft).call(abi.encodeCall(NightFrogs.mint, (1)));
+        if (reenter) (reentrySucceeded,) = address(nft).call(abi.encodeWithSignature("mint(uint256)", 1));
         if (forwardTo != address(0)) nft.transferFrom(address(this), forwardTo, id);
         return IERC721Receiver.onERC721Received.selector;
     }
