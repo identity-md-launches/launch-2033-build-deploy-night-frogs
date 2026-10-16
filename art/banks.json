@@ -1,0 +1,14 @@
+[
+  {
+    "contract": "FrogArt1",
+    "start": 0,
+    "count": 19,
+    "bytes": 23864
+  },
+  {
+    "contract": "FrogArt2",
+    "start": 19,
+    "count": 81,
+    "bytes": 16504
+  }
+]

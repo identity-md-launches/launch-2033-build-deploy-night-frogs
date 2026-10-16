@@ -1,0 +1,379 @@
+[
+  {
+    "category": "Background",
+    "traits": [
+      {
+        "index": 0,
+        "name": "Neon City",
+        "weight": 30,
+        "nameRecord": 4,
+        "svgRecord": 5,
+        "accent": "#3FE6FF"
+      },
+      {
+        "index": 1,
+        "name": "Ultraviolet Storm",
+        "weight": 20,
+        "nameRecord": 6,
+        "svgRecord": 7,
+        "accent": "#7C5CFF"
+      },
+      {
+        "index": 2,
+        "name": "Moonlit Sky",
+        "weight": 20,
+        "nameRecord": 8,
+        "svgRecord": 9,
+        "accent": "#C4B4FF"
+      },
+      {
+        "index": 3,
+        "name": "Deep Starfield",
+        "weight": 20,
+        "nameRecord": 10,
+        "svgRecord": 11,
+        "accent": "#3FE6FF"
+      },
+      {
+        "index": 4,
+        "name": "Server Corridor",
+        "weight": 10,
+        "nameRecord": 12,
+        "svgRecord": 13,
+        "accent": "#B8FF4A"
+      },
+      {
+        "index": 5,
+        "name": "Genesis Sunburst",
+        "weight": 100,
+        "nameRecord": 14,
+        "svgRecord": 15,
+        "accent": "#FFC46B"
+      }
+    ]
+  },
+  {
+    "category": "Body",
+    "traits": [
+      {
+        "index": 0,
+        "name": "Black Hoodie",
+        "weight": 30,
+        "nameRecord": 16,
+        "svgRecord": 17
+      },
+      {
+        "index": 1,
+        "name": "Purple Hoodie",
+        "weight": 23,
+        "nameRecord": 18,
+        "svgRecord": 19
+      },
+      {
+        "index": 2,
+        "name": "Hi-vis Safety Vest",
+        "weight": 18,
+        "nameRecord": 20,
+        "svgRecord": 21
+      },
+      {
+        "index": 3,
+        "name": "Grey Work Jacket",
+        "weight": 15,
+        "nameRecord": 22,
+        "svgRecord": 23
+      },
+      {
+        "index": 4,
+        "name": "NIGHTSHIFT Jumpsuit",
+        "weight": 11,
+        "nameRecord": 24,
+        "svgRecord": 25
+      },
+      {
+        "index": 5,
+        "name": "Gold Tracksuit",
+        "weight": 3,
+        "nameRecord": 26,
+        "svgRecord": 27
+      }
+    ]
+  },
+  {
+    "category": "Skin",
+    "traits": [
+      {
+        "index": 0,
+        "name": "Classic Green",
+        "weight": 35,
+        "nameRecord": 28,
+        "svgRecord": 29
+      },
+      {
+        "index": 1,
+        "name": "Dark Green",
+        "weight": 20,
+        "nameRecord": 30,
+        "svgRecord": 31
+      },
+      {
+        "index": 2,
+        "name": "Acid Neon",
+        "weight": 15,
+        "nameRecord": 32,
+        "svgRecord": 33
+      },
+      {
+        "index": 3,
+        "name": "Mint Zombie",
+        "weight": 5,
+        "nameRecord": 34,
+        "svgRecord": 35
+      },
+      {
+        "index": 4,
+        "name": "Ice Blue",
+        "weight": 10,
+        "nameRecord": 36,
+        "svgRecord": 37
+      },
+      {
+        "index": 5,
+        "name": "Purple Alien",
+        "weight": 10,
+        "nameRecord": 38,
+        "svgRecord": 39
+      },
+      {
+        "index": 6,
+        "name": "Gold",
+        "weight": 4,
+        "nameRecord": 40,
+        "svgRecord": 41
+      },
+      {
+        "index": 7,
+        "name": "Chrome",
+        "weight": 1,
+        "nameRecord": 42,
+        "svgRecord": 43
+      }
+    ]
+  },
+  {
+    "category": "Mouth",
+    "traits": [
+      {
+        "index": 0,
+        "name": "Corner Smirk",
+        "weight": 28,
+        "nameRecord": 44,
+        "svgRecord": 45
+      },
+      {
+        "index": 1,
+        "name": "Toothpick",
+        "weight": 20,
+        "nameRecord": 46,
+        "svgRecord": 47
+      },
+      {
+        "index": 2,
+        "name": "Big Grin",
+        "weight": 15,
+        "nameRecord": 48,
+        "svgRecord": 49
+      },
+      {
+        "index": 3,
+        "name": "3 AM Yawn",
+        "weight": 12,
+        "nameRecord": 50,
+        "svgRecord": 51
+      },
+      {
+        "index": 4,
+        "name": "Knowing Smile",
+        "weight": 18,
+        "nameRecord": 52,
+        "svgRecord": 53
+      },
+      {
+        "index": 5,
+        "name": "Gritted Teeth",
+        "weight": 7,
+        "nameRecord": 54,
+        "svgRecord": 55
+      }
+    ]
+  },
+  {
+    "category": "Eyes",
+    "traits": [
+      {
+        "index": 0,
+        "name": "Heavy Lids",
+        "weight": 38,
+        "nameRecord": 56,
+        "svgRecord": 57
+      },
+      {
+        "index": 1,
+        "name": "Laser Eyes",
+        "weight": 7,
+        "nameRecord": 58,
+        "svgRecord": 59
+      },
+      {
+        "index": 2,
+        "name": "Neon Shades",
+        "weight": 16,
+        "nameRecord": 60,
+        "svgRecord": 61
+      },
+      {
+        "index": 3,
+        "name": "Cyan VR Visor",
+        "weight": 8,
+        "nameRecord": 62,
+        "svgRecord": 63
+      },
+      {
+        "index": 4,
+        "name": "Wired",
+        "weight": 12,
+        "nameRecord": 64,
+        "svgRecord": 65
+      },
+      {
+        "index": 5,
+        "name": "Deadpan Wink",
+        "weight": 10,
+        "nameRecord": 66,
+        "svgRecord": 67
+      },
+      {
+        "index": 6,
+        "name": "Acid Glow",
+        "weight": 7,
+        "nameRecord": 68,
+        "svgRecord": 69
+      },
+      {
+        "index": 7,
+        "name": "Monocle",
+        "weight": 2,
+        "nameRecord": 70,
+        "svgRecord": 71
+      }
+    ]
+  },
+  {
+    "category": "Headwear",
+    "traits": [
+      {
+        "index": 0,
+        "name": "Headlamp Hard Hat",
+        "weight": 20,
+        "nameRecord": 72,
+        "svgRecord": 73
+      },
+      {
+        "index": 1,
+        "name": "Night Beanie",
+        "weight": 20,
+        "nameRecord": 74,
+        "svgRecord": 75
+      },
+      {
+        "index": 2,
+        "name": "Dispatcher Headset",
+        "weight": 17,
+        "nameRecord": 76,
+        "svgRecord": 77
+      },
+      {
+        "index": 3,
+        "name": "Gold Crown",
+        "weight": 3,
+        "nameRecord": 78,
+        "svgRecord": 79
+      },
+      {
+        "index": 4,
+        "name": "Backwards Cap",
+        "weight": 17,
+        "nameRecord": 80,
+        "svgRecord": 81
+      },
+      {
+        "index": 5,
+        "name": "Night Vision",
+        "weight": 8,
+        "nameRecord": 82,
+        "svgRecord": 83
+      },
+      {
+        "index": 6,
+        "name": "Moonlight Halo",
+        "weight": 1,
+        "nameRecord": 84,
+        "svgRecord": 85
+      },
+      {
+        "index": 7,
+        "name": "None",
+        "weight": 14,
+        "nameRecord": 86,
+        "svgRecord": 87
+      }
+    ]
+  },
+  {
+    "category": "Accessory",
+    "traits": [
+      {
+        "index": 0,
+        "name": "SHIFT Chain",
+        "weight": 15,
+        "nameRecord": 88,
+        "svgRecord": 89
+      },
+      {
+        "index": 1,
+        "name": "Crew ID Badge",
+        "weight": 22,
+        "nameRecord": 90,
+        "svgRecord": 91
+      },
+      {
+        "index": 2,
+        "name": "Shipping Coffee",
+        "weight": 27,
+        "nameRecord": 92,
+        "svgRecord": 93
+      },
+      {
+        "index": 3,
+        "name": "Overtime Energy",
+        "weight": 14,
+        "nameRecord": 94,
+        "svgRecord": 95
+      },
+      {
+        "index": 4,
+        "name": "IMD Swarm Earpiece",
+        "weight": 8,
+        "nameRecord": 96,
+        "svgRecord": 97
+      },
+      {
+        "index": 5,
+        "name": "None",
+        "weight": 14,
+        "nameRecord": 98,
+        "svgRecord": 99
+      }
+    ]
+  }
+]

@@ -1,0 +1,278 @@
+{
+  "demoWord": 20261016,
+  "source": "NightFrogs.tokenURI after local mock VRF fulfillment; not production traits",
+  "tokens": [
+    {
+      "tokenId": 1,
+      "svg": "frog-001.svg",
+      "png": "frog-001.png",
+      "attributes": {
+        "Background": "Genesis Sunburst",
+        "Body": "Gold Tracksuit",
+        "Skin": "Chrome",
+        "Mouth": "Corner Smirk",
+        "Eyes": "Laser Eyes",
+        "Headwear": "Gold Crown",
+        "Accessory": "SHIFT Chain",
+        "Edition": "Genesis",
+        "Signature": "Zero-Sleep Captain / 1 of 1"
+      },
+      "svgSha256": "34812e068eac2588afa03c520a10f4a4b0723262cc6f70deadb7acf39bdffd97"
+    },
+    {
+      "tokenId": 2,
+      "svg": "frog-002.svg",
+      "png": "frog-002.png",
+      "attributes": {
+        "Background": "Genesis Sunburst",
+        "Body": "Purple Hoodie",
+        "Skin": "Dark Green",
+        "Mouth": "Corner Smirk",
+        "Eyes": "Neon Shades",
+        "Headwear": "Dispatcher Headset",
+        "Accessory": "Overtime Energy",
+        "Edition": "Genesis",
+        "Signature": "Crew Issue"
+      },
+      "svgSha256": "15f156228ef9635d3ef7d311986f3be97c69706b40a6439f1302ef20b59762e8"
+    },
+    {
+      "tokenId": 77,
+      "svg": "frog-077.svg",
+      "png": "frog-077.png",
+      "attributes": {
+        "Background": "Genesis Sunburst",
+        "Body": "Purple Hoodie",
+        "Skin": "Classic Green",
+        "Mouth": "Knowing Smile",
+        "Eyes": "Neon Shades",
+        "Headwear": "Night Vision",
+        "Accessory": "None",
+        "Edition": "Genesis",
+        "Signature": "Crew Issue"
+      },
+      "svgSha256": "641cacef6f84564126944ee8491cdaae084332f79f0d70e10daefe7ebb201307"
+    },
+    {
+      "tokenId": 78,
+      "svg": "frog-078.svg",
+      "png": "frog-078.png",
+      "attributes": {
+        "Background": "Neon City",
+        "Body": "Grey Work Jacket",
+        "Skin": "Mint Zombie",
+        "Mouth": "Gritted Teeth",
+        "Eyes": "Acid Glow",
+        "Headwear": "Headlamp Hard Hat",
+        "Accessory": "Crew ID Badge",
+        "Edition": "Night Crew",
+        "Signature": "Crew Issue"
+      },
+      "svgSha256": "fdd4daa01d903cd60edbcd057c7b5aef0855f708e905e0f97b6ce1a18d0b124c"
+    },
+    {
+      "tokenId": 79,
+      "svg": "frog-079.svg",
+      "png": "frog-079.png",
+      "attributes": {
+        "Background": "Neon City",
+        "Body": "Grey Work Jacket",
+        "Skin": "Classic Green",
+        "Mouth": "Corner Smirk",
+        "Eyes": "Wired",
+        "Headwear": "Dispatcher Headset",
+        "Accessory": "SHIFT Chain",
+        "Edition": "Night Crew",
+        "Signature": "Crew Issue"
+      },
+      "svgSha256": "45086fbf04a740c9050369dbd9c567ef9ccdf1c21f31fb5314bf09137a030312"
+    },
+    {
+      "tokenId": 80,
+      "svg": "frog-080.svg",
+      "png": "frog-080.png",
+      "attributes": {
+        "Background": "Neon City",
+        "Body": "Purple Hoodie",
+        "Skin": "Classic Green",
+        "Mouth": "Corner Smirk",
+        "Eyes": "Heavy Lids",
+        "Headwear": "Headlamp Hard Hat",
+        "Accessory": "Shipping Coffee",
+        "Edition": "Night Crew",
+        "Signature": "Crew Issue"
+      },
+      "svgSha256": "b88e00d175f77ba0d932e0d76807753d2017c1e65c139350b4a6077309ded03e"
+    },
+    {
+      "tokenId": 81,
+      "svg": "frog-081.svg",
+      "png": "frog-081.png",
+      "attributes": {
+        "Background": "Neon City",
+        "Body": "NIGHTSHIFT Jumpsuit",
+        "Skin": "Classic Green",
+        "Mouth": "Corner Smirk",
+        "Eyes": "Deadpan Wink",
+        "Headwear": "None",
+        "Accessory": "Crew ID Badge",
+        "Edition": "Night Crew",
+        "Signature": "Crew Issue"
+      },
+      "svgSha256": "a02ad34177a66a7ca95e5bcc9a5f796a174c223e0fac8e22e975e97fd7cdefb9"
+    },
+    {
+      "tokenId": 82,
+      "svg": "frog-082.svg",
+      "png": "frog-082.png",
+      "attributes": {
+        "Background": "Neon City",
+        "Body": "NIGHTSHIFT Jumpsuit",
+        "Skin": "Classic Green",
+        "Mouth": "Toothpick",
+        "Eyes": "Laser Eyes",
+        "Headwear": "Night Beanie",
+        "Accessory": "Shipping Coffee",
+        "Edition": "Night Crew",
+        "Signature": "Crew Issue"
+      },
+      "svgSha256": "3263347fa34dd6335d4b51869340421f2dcf3c2e91cc28e9aa2439e9761d5b11"
+    },
+    {
+      "tokenId": 83,
+      "svg": "frog-083.svg",
+      "png": "frog-083.png",
+      "attributes": {
+        "Background": "Deep Starfield",
+        "Body": "Hi-vis Safety Vest",
+        "Skin": "Classic Green",
+        "Mouth": "Knowing Smile",
+        "Eyes": "Cyan VR Visor",
+        "Headwear": "None",
+        "Accessory": "None",
+        "Edition": "Night Crew",
+        "Signature": "Crew Issue"
+      },
+      "svgSha256": "fec0f2ec12df1d0d5d8662addbf6b57ac986a3bba4cb871b17ac3afd655f3689"
+    },
+    {
+      "tokenId": 84,
+      "svg": "frog-084.svg",
+      "png": "frog-084.png",
+      "attributes": {
+        "Background": "Deep Starfield",
+        "Body": "Gold Tracksuit",
+        "Skin": "Dark Green",
+        "Mouth": "Big Grin",
+        "Eyes": "Neon Shades",
+        "Headwear": "Backwards Cap",
+        "Accessory": "SHIFT Chain",
+        "Edition": "Night Crew",
+        "Signature": "Crew Issue"
+      },
+      "svgSha256": "8bafc505128867d204f5453c3ca9f4474484c04376273ceac42b635cb425e465"
+    },
+    {
+      "tokenId": 112,
+      "svg": "frog-112.svg",
+      "png": "frog-112.png",
+      "attributes": {
+        "Background": "Server Corridor",
+        "Body": "Purple Hoodie",
+        "Skin": "Classic Green",
+        "Mouth": "Corner Smirk",
+        "Eyes": "Cyan VR Visor",
+        "Headwear": "None",
+        "Accessory": "Shipping Coffee",
+        "Edition": "Night Crew",
+        "Signature": "Crew Issue"
+      },
+      "svgSha256": "5c0103c533d865ed7fdfa0dd569e7cd80c06038273dd08bf7b61dd70434b75de"
+    },
+    {
+      "tokenId": 113,
+      "svg": "frog-113.svg",
+      "png": "frog-113.png",
+      "attributes": {
+        "Background": "Deep Starfield",
+        "Body": "NIGHTSHIFT Jumpsuit",
+        "Skin": "Ice Blue",
+        "Mouth": "3 AM Yawn",
+        "Eyes": "Monocle",
+        "Headwear": "None",
+        "Accessory": "SHIFT Chain",
+        "Edition": "Night Crew",
+        "Signature": "Crew Issue"
+      },
+      "svgSha256": "0c421467c2448b4ea3e9209c473c75832471de44631f6c3c2922b2158bd56bb5"
+    },
+    {
+      "tokenId": 131,
+      "svg": "frog-131.svg",
+      "png": "frog-131.png",
+      "attributes": {
+        "Background": "Neon City",
+        "Body": "Hi-vis Safety Vest",
+        "Skin": "Acid Neon",
+        "Mouth": "3 AM Yawn",
+        "Eyes": "Deadpan Wink",
+        "Headwear": "Moonlight Halo",
+        "Accessory": "Overtime Energy",
+        "Edition": "Night Crew",
+        "Signature": "Crew Issue"
+      },
+      "svgSha256": "c807b5f29c3b72efb3d48f8af2b0faaafc973af460bdd3e1f7c7e98609d3e89b"
+    },
+    {
+      "tokenId": 187,
+      "svg": "frog-187.svg",
+      "png": "frog-187.png",
+      "attributes": {
+        "Background": "Moonlit Sky",
+        "Body": "Black Hoodie",
+        "Skin": "Gold",
+        "Mouth": "Toothpick",
+        "Eyes": "Neon Shades",
+        "Headwear": "Backwards Cap",
+        "Accessory": "SHIFT Chain",
+        "Edition": "Night Crew",
+        "Signature": "Crew Issue"
+      },
+      "svgSha256": "bb38b32a5c909c1ecf09feb62e80d672a3173f088c6a5cb810fb5cea72aff5bd"
+    },
+    {
+      "tokenId": 224,
+      "svg": "frog-224.svg",
+      "png": "frog-224.png",
+      "attributes": {
+        "Background": "Ultraviolet Storm",
+        "Body": "Purple Hoodie",
+        "Skin": "Purple Alien",
+        "Mouth": "Big Grin",
+        "Eyes": "Wired",
+        "Headwear": "Backwards Cap",
+        "Accessory": "IMD Swarm Earpiece",
+        "Edition": "Night Crew",
+        "Signature": "Crew Issue"
+      },
+      "svgSha256": "0a8d3ad533deaef16e1e2fc65155ac8e47661c2f96b5b2879c23db110006f1b5"
+    },
+    {
+      "tokenId": 500,
+      "svg": "frog-500.svg",
+      "png": "frog-500.png",
+      "attributes": {
+        "Background": "Neon City",
+        "Body": "Black Hoodie",
+        "Skin": "Classic Green",
+        "Mouth": "Toothpick",
+        "Eyes": "Heavy Lids",
+        "Headwear": "Night Beanie",
+        "Accessory": "Crew ID Badge",
+        "Edition": "Night Crew",
+        "Signature": "Crew Issue"
+      },
+      "svgSha256": "2e370f989ff829ece59fcd103d30c0ce754a92131ef4de47e540ddb5e3cdf39d"
+    }
+  ]
+}
