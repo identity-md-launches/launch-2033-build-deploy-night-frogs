@@ -1,0 +1,29 @@
+{
+  "kind": "evm_contracts",
+  "contracts": [
+    {
+      "contract": "FrogArt1",
+      "constructorArgs": []
+    },
+    {
+      "contract": "FrogArt2",
+      "constructorArgs": []
+    },
+    {
+      "contract": "FrogRenderer",
+      "constructorArgs": [
+        "$contract:FrogArt1",
+        "$contract:FrogArt2"
+      ]
+    },
+    {
+      "contract": "NightFrogs",
+      "constructorArgs": [
+        "$owner",
+        "0xD7f86b4b8Cae7D942340FF628F82735b7a20893a",
+        "$contract:FrogRenderer"
+      ]
+    }
+  ],
+  "notes": "NIGHT FROGS (NFROG): a fully onchain generative ERC-721 of 500 frogs (ids 1-500, ids 1-77 Genesis) for NIGHTSHIFT, deployed as four application contracts in dependency order. FrogArt1 and FrogArt2 take no constructor arguments; each writes one immutable SSTORE2 data child (FrogData, an internal child, not a manifest entry) holding the packed SVG layers, shared definitions, moon placeholder, token #1 captain set and trait names (19 and 81 records). FrogRenderer takes the two art store addresses and computes traits and the base64 JSON tokenURI with the SVG image and every attribute onchain; it has no owner. NightFrogs takes the launch owner ($owner, also the initial treasury), the Chainlink VRF v2.5 Ethereum coordinator 0xD7f86b4b8Cae7D942340FF628F82735b7a20893a, and the renderer address. Constants: IMD payment token 0xD34a99Bc0f67aE1bbd63C660e6d0b0dd03E263B7, burn address 0x000000000000000000000000000000000000dEaD, max supply 500, max 10 mints per wallet, 5% ERC-2981 royalty to the owner. Price starts at 2 IMD (2e18). Every mint moves exactly 50% of the IMD to the burn address and 50% to the treasury in the same transaction, emits Burned, and totalBurned accumulates; the split is immutable. Nothing is pre-minted and the owner has no free mint. The owner can only change price and treasury, configure the VRF subscription id and key hash, hand over ownership (two-step), and call reveal once; one random word plus the token id selects traits, and tokenURI shows the moon placeholder before fulfillment. Not upgradeable, not pausable, no ETH, no fungible token, no pool. Constructors make no external calls: the IMD token and coordinator are checked on first use, not at deployment."
+}
