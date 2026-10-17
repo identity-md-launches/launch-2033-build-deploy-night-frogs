@@ -22,6 +22,8 @@ contract DeafBuyer {
 contract BoundariesTest is Fixture {
     using Decode for string;
 
+    event SaleClosed(uint256 finalSupply);
+
     uint256 internal constant MAX_PRICE_EVEN = (type(uint256).max / 500) - ((type(uint256).max / 500) % 2);
 
     function _contains(string memory haystack, string memory needle) internal pure returns (bool) {
@@ -319,21 +321,192 @@ contract BoundariesTest is Fixture {
         nft.reveal();
     }
 
-    function testRevealWaitsForTheVeryLastFrog() public {
+    /// @dev The request one frog short of sellout freezes the supply at 499: the last frog is never sold,
+    /// not to a fresh wallet, not with a cost ceiling, and not after the word lands.
+    function testRevealOneShortOfSelloutFreezesSupplyAtFourNinetyNine() public {
         for (uint256 i; i < 49; ++i) {
             _buy(address(uint160(0x80000 + i)), 10);
         }
         _buy(alice, 9);
         assertEq(nft.totalSupply(), 499);
+        assertFalse(nft.revealRequestStale()); // nothing requested yet: never stale
         vm.startPrank(owner);
         nft.configureVRF(42, TEST_KEY);
-        vm.expectRevert(NightFrogs.CollectionNotSoldOut.selector);
+        vm.expectEmit(false, false, false, true, address(nft));
+        emit SaleClosed(499);
         nft.reveal();
         vm.stopPrank();
-        _buy(bob, 1);
+        assertTrue(nft.revealRequested());
+        token.fund(bob, 2e18);
+        vm.startPrank(bob);
+        token.approve(address(nft), 2e18);
+        vm.expectRevert(NightFrogs.MintClosed.selector);
+        nft.mint(1);
+        vm.expectRevert(NightFrogs.MintClosed.selector);
+        nft.mint(1, 2e18);
+        vm.stopPrank();
+        _fulfill(99);
+        vm.prank(bob);
+        vm.expectRevert(NightFrogs.MintClosed.selector);
+        nft.mint(1);
+        assertEq(nft.totalSupply(), 499);
+        assertEq(token.balanceOf(bob), 2e18);
+        assertEq(nft.totalBurned(), 499e18);
+        vm.expectRevert(abi.encodeWithSelector(IERC721Errors.ERC721NonexistentToken.selector, 500));
+        nft.ownerOf(500);
+    }
+
+    /// @dev A single minted frog is enough to request; an empty collection is not.
+    function testRevealNeedsExactlyOneFrog() public {
+        vm.startPrank(owner);
+        nft.configureVRF(42, TEST_KEY);
+        vm.expectRevert(NightFrogs.NothingMinted.selector);
+        nft.reveal();
+        vm.stopPrank();
+        assertFalse(nft.revealRequested());
+        assertEq(coordinator.requests(), 0);
+        _buy(alice, 1);
+        vm.expectEmit(false, false, false, true, address(nft));
+        emit SaleClosed(1);
         vm.prank(owner);
         nft.reveal();
         assertTrue(nft.revealRequested());
+        _fulfill(5);
+        assertEq(nft.tokenURI(1), renderer.tokenURI(1, true, 5));
+    }
+
+    /// @dev The order of checks: a closed sale is reported before supply, wallet and cost problems, but
+    /// an invalid quantity is reported first of all.
+    function testClosedSaleErrorOrdering() public {
+        _buy(alice, 10);
+        _request();
+        token.fund(alice, 20e18);
+        vm.startPrank(alice);
+        token.approve(address(nft), 20e18);
+        vm.expectRevert(NightFrogs.InvalidQuantity.selector);
+        nft.mint(0);
+        vm.expectRevert(NightFrogs.InvalidQuantity.selector);
+        nft.mint(11, 0);
+        vm.expectRevert(NightFrogs.MintClosed.selector);
+        nft.mint(1); // alice is at her wallet cap: MintClosed still wins
+        vm.expectRevert(NightFrogs.MintClosed.selector);
+        nft.mint(1, 0); // and over the cost ceiling
+        vm.stopPrank();
+        assertEq(nft.mintedBy(alice), 10);
+    }
+
+    /// forge-config: default.fuzz.runs = 256
+    /// @dev The ceiling is inclusive: a ceiling equal to the cost pays, one unit less reverts with the
+    /// exact cost in the error, and nothing moves on a revert.
+    function testFuzzCostCeilingIsInclusiveAndAtomic(uint8 rawQuantity, uint256 rawPrice, uint256 rawCeiling)
+        public
+    {
+        uint256 quantity = bound(rawQuantity, 1, 10);
+        uint256 unitPrice = bound(rawPrice, 1, 1e24) * 2;
+        vm.prank(owner);
+        nft.setPrice(unitPrice);
+        uint256 cost = unitPrice * quantity;
+        uint256 ceiling = bound(rawCeiling, 0, cost * 2);
+        token.fund(alice, cost);
+        vm.startPrank(alice);
+        token.approve(address(nft), cost);
+        if (ceiling >= cost) {
+            nft.mint(quantity, ceiling);
+            assertEq(nft.balanceOf(alice), quantity);
+            assertEq(token.balanceOf(alice), 0);
+            assertEq(nft.totalBurned(), cost / 2);
+        } else {
+            vm.expectRevert(abi.encodeWithSelector(NightFrogs.CostAboveLimit.selector, cost, ceiling));
+            nft.mint(quantity, ceiling);
+            assertEq(nft.balanceOf(alice), 0);
+            assertEq(nft.mintedBy(alice), 0);
+            assertEq(token.balanceOf(alice), cost);
+            assertEq(token.allowance(alice, address(nft)), cost);
+            assertEq(nft.totalBurned(), 0);
+            assertEq(nft.totalSupply(), 0);
+        }
+        vm.stopPrank();
+    }
+
+    /// @dev A ceiling of exactly the quoted total buys at the quoted price even if the owner lowers the
+    /// price first: the buyer is only ever charged the execution-time price.
+    function testCostCeilingAllowsCheaperExecution() public {
+        token.fund(alice, 20e18);
+        vm.prank(alice);
+        token.approve(address(nft), 20e18);
+        vm.prank(owner);
+        nft.setPrice(1e18);
+        vm.prank(alice);
+        nft.mint(10, 20e18);
+        assertEq(token.balanceOf(alice), 10e18);
+        assertEq(nft.totalBurned(), 5e18);
+        assertEq(nft.balanceOf(alice), 10);
+    }
+
+    /// @dev Replacing a stale request never reopens the sale, keeps the frozen supply, and the
+    /// abandoned id is dead even if it arrives after the replacement has already revealed.
+    function testStaleReplacementKeepsSaleClosedAndSupplyFrozen() public {
+        _buy(alice, 3);
+        uint256 requestedAt = 1_800_000_000;
+        vm.warp(requestedAt);
+        uint256 firstId = _request();
+        vm.warp(requestedAt + nft.REVEAL_RETRY_DELAY());
+        vm.prank(owner);
+        uint256 secondId = nft.reveal();
+        assertEq(secondId, firstId + 1);
+        assertTrue(nft.revealRequested());
+        assertEq(nft.totalSupply(), 3);
+        token.fund(bob, 2e18);
+        vm.startPrank(bob);
+        token.approve(address(nft), 2e18);
+        vm.expectRevert(NightFrogs.MintClosed.selector);
+        nft.mint(1);
+        vm.stopPrank();
+        // The replacement itself goes stale again if nothing arrives: a third request is possible.
+        vm.warp(block.timestamp + nft.REVEAL_RETRY_DELAY() - 1);
+        vm.prank(owner);
+        vm.expectRevert(NightFrogs.RevealAlreadyRequested.selector);
+        nft.reveal();
+        vm.warp(block.timestamp + 1);
+        vm.prank(owner);
+        uint256 thirdId = nft.reveal();
+        assertEq(thirdId, secondId + 1);
+        assertEq(coordinator.requests(), 3);
+        uint256[] memory words = new uint256[](1);
+        words[0] = 1;
+        vm.expectRevert(NightFrogs.InvalidFulfillment.selector);
+        coordinator.fulfill(nft, firstId, words);
+        vm.expectRevert(NightFrogs.InvalidFulfillment.selector);
+        coordinator.fulfill(nft, secondId, words);
+        _fulfill(2);
+        assertEq(nft.randomWord(), 2);
+        vm.expectRevert(NightFrogs.InvalidFulfillment.selector);
+        coordinator.fulfill(nft, firstId, words);
+        assertEq(nft.randomWord(), 2);
+        assertEq(nft.totalSupply(), 3);
+    }
+
+    /// @dev During the stale window the owner may fix the configuration, but zero values stay refused
+    /// and the new values are what the replacement request carries.
+    function testStaleWindowReconfigurationStillValidated() public {
+        _buy(alice, 1);
+        uint256 requestedAt = 1_800_000_000;
+        vm.warp(requestedAt);
+        _request();
+        vm.warp(requestedAt + nft.REVEAL_RETRY_DELAY());
+        bytes32 otherKey = keccak256("corrected gas lane");
+        vm.startPrank(owner);
+        vm.expectRevert(NightFrogs.VRFNotConfigured.selector);
+        nft.configureVRF(0, otherKey);
+        vm.expectRevert(NightFrogs.VRFNotConfigured.selector);
+        nft.configureVRF(77, bytes32(0));
+        nft.configureVRF(77, otherKey);
+        nft.reveal();
+        vm.stopPrank();
+        assertEq(coordinator.lastSub(), 77);
+        assertEq(coordinator.lastKey(), otherKey);
+        assertEq(nft.revealRequestedAt(), requestedAt + nft.REVEAL_RETRY_DELAY());
+        assertFalse(nft.revealRequestStale());
     }
 
     function testNewOwnerAfterHandoverControlsRevealAndRoyalties() public {

@@ -7,9 +7,10 @@ import {NightFrogs} from "../src/NightFrogs.sol";
 import {FrogRenderer} from "../src/FrogRenderer.sol";
 import {MockIMD, MockCoordinator} from "./helpers/Mocks.sol";
 
-/// @dev Drives the whole collection life: paid mints, VRF configuration, the single reveal request,
-/// genuine and foreign fulfillment attempts, transfers and two-step ownership handover, in random order.
-/// Ghost variables record what the contract must now hold; the invariants compare them after every call.
+/// @dev Drives the whole collection life: paid mints, VRF configuration, the sale-closing reveal request,
+/// time passing so a request goes stale and gets replaced, genuine, abandoned and foreign fulfillment
+/// attempts, transfers and two-step ownership handover, in random order. Ghost variables record what the
+/// contract must now hold; the invariants compare them after every call.
 contract LifecycleHandler is Test {
     NightFrogs public immutable nft;
     MockIMD public immutable token;
@@ -18,6 +19,7 @@ contract LifecycleHandler is Test {
 
     uint256 public constant ACTORS = 64;
     uint256 public constant FILLERS = 50;
+    uint256 public constant RETRY_DELAY = 3 days;
 
     // Ghost state.
     address public immutable initialOwner;
@@ -25,6 +27,9 @@ contract LifecycleHandler is Test {
     address public ghostPending;
     bool public ghostRequested;
     uint256 public ghostRequestId;
+    uint256 public ghostRequestedAt;
+    uint256 public ghostClosedSupply;
+    uint256 public ghostRequests; // coordinator requests the contract has made
     uint256 public ghostSub;
     bytes32 public ghostKey;
     bool public ghostRevealed;
@@ -34,6 +39,8 @@ contract LifecycleHandler is Test {
     uint256 public foreignAttempts;
     uint256 public genuineAttempts;
     uint256 public revealAttempts;
+    uint256 public replacements;
+    uint256 public abandonedAttempts;
 
     constructor(
         NightFrogs nft_,
@@ -79,25 +86,33 @@ contract LifecycleHandler is Test {
         uint256 mintedBefore = nft.mintedBy(buyer);
         vm.startPrank(buyer);
         token.approve(address(nft), cost);
-        try nft.mint(quantity) {
+        // Half the buyers use the cost-ceiling overload with exactly the quoted total.
+        bytes memory data = rawQuantity % 2 == 1
+            ? abi.encodeWithSignature("mint(uint256,uint256)", quantity, cost)
+            : abi.encodeWithSignature("mint(uint256)", quantity);
+        (bool ok,) = address(nft).call(data);
+        if (ok) {
             assertTrue(quantity >= 1 && quantity <= 10, "quantity outside 1..10 accepted");
+            assertFalse(ghostRequested, "mint accepted after the reveal request closed the sale");
             assertLe(supplyBefore + quantity, 500, "supply cap crossed");
             assertLe(mintedBefore + quantity, 10, "wallet cap crossed");
             paid += cost;
             for (uint256 i = 1; i <= quantity; ++i) {
                 assertEq(nft.ownerOf(supplyBefore + i), buyer, "sequential id not owned by payer");
             }
-        } catch {
-            bool legitimate = quantity == 0 || quantity > 10 || supplyBefore + quantity > 500
-                || mintedBefore + quantity > 10;
+        } else {
+            bool legitimate = quantity == 0 || quantity > 10 || ghostRequested
+                || supplyBefore + quantity > 500 || mintedBefore + quantity > 10;
             assertTrue(legitimate, "a valid paid mint reverted");
             assertEq(nft.totalSupply(), supplyBefore, "failed mint changed supply");
+            assertEq(nft.mintedBy(buyer), mintedBefore, "failed mint changed the wallet count");
         }
         vm.stopPrank();
     }
 
-    /// @dev Sells the remaining supply to fresh wallets so sequences can reach the reveal path.
+    /// @dev Sells the remaining supply to fresh wallets so sequences can reach the sellout path.
     function fillRemaining(uint256 rawBatches) external {
+        if (ghostRequested) return;
         uint256 batches = bound(rawBatches, 1, FILLERS);
         for (uint256 i; i < batches && nft.totalSupply() + 10 <= 500 && fillers < FILLERS; ++i) {
             address buyer = filler(fillers++);
@@ -111,46 +126,87 @@ contract LifecycleHandler is Test {
         }
     }
 
+    /// @dev What the model says about staleness: an unfulfilled request older than the retry delay.
+    function ghostStale() public view returns (bool) {
+        return ghostRequested && !ghostRevealed && block.timestamp >= ghostRequestedAt + RETRY_DELAY;
+    }
+
+    /// @dev Time passes in steps from a minute to a little over the retry delay, so sequences reach
+    /// both sides of the stale boundary (including the exact second).
+    function warp(uint256 rawDelta) external {
+        uint256 delta;
+        if (rawDelta % 7 == 0 && ghostRequested && !ghostRevealed) {
+            uint256 edge = ghostRequestedAt + RETRY_DELAY;
+            delta = edge > block.timestamp ? edge - block.timestamp : 0; // land exactly on the boundary
+        } else {
+            delta = bound(rawDelta, 1 minutes, RETRY_DELAY + 1 hours);
+        }
+        vm.warp(block.timestamp + delta);
+    }
+
     function configure(uint256 rawSub, uint256 rawKey) external {
         uint256 sub = bound(rawSub, 0, 3);
         bytes32 key = rawKey % 3 == 0 ? bytes32(0) : keccak256(abi.encode(rawKey));
+        bool locked = ghostRequested && !ghostStale();
         vm.prank(ghostOwner);
         try nft.configureVRF(sub, key) {
-            assertFalse(ghostRequested, "configuration changed after request");
+            assertFalse(locked, "configuration changed while a live request is pending");
+            assertFalse(ghostRevealed, "configuration changed after reveal");
             assertTrue(sub != 0 && key != bytes32(0), "zero configuration accepted");
             ghostSub = sub;
             ghostKey = key;
         } catch {
-            assertTrue(ghostRequested || sub == 0 || key == bytes32(0), "valid configuration rejected");
+            assertTrue(locked || sub == 0 || key == bytes32(0), "valid configuration rejected");
         }
     }
 
     function reveal() external {
         ++revealAttempts;
         uint256 requestsBefore = coordinator.requests();
+        uint256 supplyBefore = nft.totalSupply();
+        bool replacing = ghostRequested; // only legitimate when stale
+        bool locked = ghostRequested && !ghostStale();
         vm.prank(ghostOwner);
         try nft.reveal() returns (uint256 id) {
-            assertFalse(ghostRequested, "second request accepted");
-            assertEq(nft.totalSupply(), 500, "reveal before sellout");
+            assertFalse(locked, "second request accepted while the first is live");
+            assertFalse(ghostRevealed, "request accepted after reveal");
+            assertGt(supplyBefore, 0, "reveal with nothing minted");
             assertTrue(ghostSub != 0 && ghostKey != bytes32(0), "reveal without configuration");
             assertEq(coordinator.requests(), requestsBefore + 1, "request not forwarded");
             assertEq(coordinator.lastSub(), ghostSub);
             assertEq(coordinator.lastKey(), ghostKey);
-            ghostRequested = true;
+            assertEq(nft.totalSupply(), supplyBefore, "request changed supply");
+            if (replacing) {
+                assertEq(supplyBefore, ghostClosedSupply, "supply moved between request and replacement");
+                assertTrue(id != ghostRequestId, "replacement reused the abandoned id");
+                ++replacements;
+            } else {
+                ghostRequested = true;
+                ghostClosedSupply = supplyBefore;
+            }
             ghostRequestId = id;
+            ghostRequestedAt = block.timestamp;
+            ++ghostRequests;
         } catch {
             assertEq(coordinator.requests(), requestsBefore, "failed reveal still requested");
             assertTrue(
-                ghostRequested || nft.totalSupply() != 500 || ghostSub == 0 || ghostKey == bytes32(0),
+                locked || ghostRevealed || supplyBefore == 0 || ghostSub == 0 || ghostKey == bytes32(0),
                 "valid reveal rejected"
             );
         }
     }
 
-    /// @dev The coordinator delivers: only the recorded request id with exactly one word may land, once.
+    /// @dev The coordinator delivers: only the latest recorded request id with exactly one word may
+    /// land, once. Ids below the current one are abandoned requests; above it, never issued.
     function fulfill(uint256 rawId, uint256 word, uint256 rawLength) external {
         ++genuineAttempts;
-        uint256 id = rawId % 3; // 0, 1 (the only id the mock issues) or 2
+        uint256 id;
+        uint256 pick = rawId % 4;
+        if (pick == 0) id = 0;
+        else if (pick == 1) id = ghostRequestId; // the live one (0 before any request)
+        else if (pick == 2) id = ghostRequestId > 0 ? ghostRequestId - 1 : 0; // abandoned or never issued
+        else id = ghostRequestId + 1; // not issued yet
+        if (ghostRequested && id != 0 && id < ghostRequestId) ++abandonedAttempts;
         uint256 length = rawLength % 3;
         uint256[] memory words = new uint256[](length);
         for (uint256 i; i < length; ++i) {
@@ -159,7 +215,7 @@ contract LifecycleHandler is Test {
         try coordinator.fulfill(nft, id, words) {
             assertTrue(ghostRequested, "fulfilled without request");
             assertFalse(ghostRevealed, "fulfilled twice");
-            assertEq(id, ghostRequestId, "foreign request id accepted");
+            assertEq(id, ghostRequestId, "foreign or abandoned request id accepted");
             assertEq(length, 1, "wrong word count accepted");
             ghostRevealed = true;
             ghostWord = word;
@@ -249,42 +305,59 @@ contract LifecycleInvariant is Fixture {
         super.setUp();
         handler = new LifecycleHandler(nft, token, coordinator, renderer, owner);
         targetContract(address(handler));
-        bytes4[] memory selectors = new bytes4[](13);
+        bytes4[] memory selectors = new bytes4[](15);
         selectors[0] = handler.buy.selector;
         selectors[1] = handler.buy.selector;
         selectors[2] = handler.fillRemaining.selector;
         selectors[3] = handler.configure.selector;
         selectors[4] = handler.reveal.selector;
-        selectors[5] = handler.fulfill.selector;
-        selectors[6] = handler.foreignFulfill.selector;
-        selectors[7] = handler.move.selector;
-        selectors[8] = handler.changePrice.selector;
-        selectors[9] = handler.changeTreasury.selector;
-        selectors[10] = handler.nominate.selector;
-        selectors[11] = handler.accept.selector;
-        selectors[12] = handler.strangerAccepts.selector;
+        selectors[5] = handler.reveal.selector;
+        selectors[6] = handler.fulfill.selector;
+        selectors[7] = handler.foreignFulfill.selector;
+        selectors[8] = handler.move.selector;
+        selectors[9] = handler.changePrice.selector;
+        selectors[10] = handler.changeTreasury.selector;
+        selectors[11] = handler.nominate.selector;
+        selectors[12] = handler.accept.selector;
+        selectors[13] = handler.strangerAccepts.selector;
+        selectors[14] = handler.warp.selector;
         targetSelector(FuzzSelector({addr: address(handler), selectors: selectors}));
     }
 
     /// @dev Reveal is a one-way state machine: unconfigured -> configured -> requested -> revealed.
+    /// A request may be replaced only while it is stale, and never once a word has landed.
     function invariant_revealStateMachineNeverReopens() public view {
         assertEq(nft.revealRequested(), handler.ghostRequested(), "request flag drifted");
         assertEq(nft.revealed(), handler.ghostRevealed(), "revealed flag drifted");
+        assertEq(nft.revealRequestStale(), handler.ghostStale(), "staleness drifted from the model");
         if (nft.revealed()) {
             assertTrue(nft.revealRequested(), "revealed without request");
             assertEq(nft.randomWord(), handler.ghostWord(), "seed changed after reveal");
+            assertFalse(nft.revealRequestStale(), "a fulfilled request reported stale");
         } else {
             assertEq(nft.randomWord(), 0, "seed set before reveal");
         }
         if (nft.revealRequested()) {
-            assertEq(nft.totalSupply(), 500, "request accepted before sellout");
-            assertEq(nft.revealRequestId(), handler.ghostRequestId(), "request id replaced");
-            assertEq(nft.subscriptionId(), handler.ghostSub(), "subscription changed after request");
-            assertEq(nft.keyHash(), handler.ghostKey(), "key hash changed after request");
-            assertEq(coordinator.requests(), 1, "more than one coordinator request");
+            assertEq(nft.revealRequestId(), handler.ghostRequestId(), "request id drifted");
+            assertEq(nft.revealRequestedAt(), handler.ghostRequestedAt(), "request time drifted");
+            assertEq(nft.subscriptionId(), handler.ghostSub(), "subscription drifted");
+            assertEq(nft.keyHash(), handler.ghostKey(), "key hash drifted");
+            assertEq(coordinator.requests(), handler.ghostRequests(), "coordinator request count drifted");
+            assertEq(handler.ghostRequests(), 1 + handler.replacements(), "requests != 1 + replacements");
+            assertGe(nft.revealRequestId(), 1);
         } else {
             assertEq(coordinator.requests(), 0, "coordinator asked without request flag");
             assertEq(nft.revealRequestId(), 0);
+            assertEq(nft.revealRequestedAt(), 0);
+            assertFalse(nft.revealRequestStale());
+        }
+    }
+
+    /// @dev The first request fixes the supply for good: no mint lands afterwards at any supply.
+    function invariant_requestFreezesSupply() public view {
+        if (nft.revealRequested()) {
+            assertGt(handler.ghostClosedSupply(), 0, "sale closed with nothing minted");
+            assertEq(nft.totalSupply(), handler.ghostClosedSupply(), "supply changed after the request");
         }
     }
 
